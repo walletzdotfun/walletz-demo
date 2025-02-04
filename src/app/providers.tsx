@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { WalletzConfig, WalletzProvider } from "walletz";
 
 type ThemeContextType = {
@@ -19,6 +19,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   const LocalWalletzConfig: WalletzConfig = {
     rpcUrl: "https://api.mainnet-beta.solana.com",

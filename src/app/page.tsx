@@ -47,7 +47,7 @@ export default function Home() {
             <WalletzModal />
             {connected && <button
               onClick={handleSign}
-              className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:opacity-90 transition-opacity"
+              className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity"
             >
               Sign Message
             </button>}
