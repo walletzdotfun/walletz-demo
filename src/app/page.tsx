@@ -1,15 +1,21 @@
 "use client"
 
 import { WalletzButton, WalletzModal, useWalletz } from 'walletz';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { ThemeContext } from './providers';
 import { Moon, Sun } from 'lucide-react';
 import bs58 from 'bs58'
+import { TokenBalance } from 'walletz/src/types';
 
 export default function Home() {
-  const { signMessage, connected } = useWalletz();
+  const { signMessage, connected, getTokenBalances } = useWalletz();
   const { theme, toggleTheme } = useContext(ThemeContext);
   const [signature, setSignature] = useState<string | null>(null);
+  const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const itemsPerPage = 10;
 
   const handleSign = async () => {
     try {
@@ -21,6 +27,37 @@ export default function Home() {
       setSignature(null);
     }
   };
+
+  const handleGetTokenBalances = async () => {
+    try {
+      setLoading(true);
+      const balances = await getTokenBalances();
+      setTokenBalances(balances);
+    } catch (error) {
+      console.error('Failed to fetch token balances:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredBalances = tokenBalances.filter(balance => {
+    const mintAddress = balance.account.data.parsed.info.mint.toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    const isMatch = mintAddress.includes(searchLower);
+    
+    return isMatch;
+  });
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredBalances.length / itemsPerPage);
+  const paginatedBalances = filteredBalances.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -51,7 +88,82 @@ export default function Home() {
             >
               Sign Message
             </button>}
+            {connected && <button
+              onClick={handleGetTokenBalances}
+              className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Get Token Balances
+            </button>}
           </div>
+
+          {/* Token Balances Display */}
+          {tokenBalances.length > 0 && connected && (
+            <div className="mt-6 p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                Token Balances
+              </h2>
+              
+              {/* Search Input */}
+              <input
+                type="text"
+                placeholder="Search by CA"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 mb-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+
+              {/* Loading State */}
+              {loading ? (
+                <div className="text-center py-4">Loading...</div>
+              ) : (
+                <>
+                  {/* Token List */}
+                  <div className="space-y-3">
+                    {paginatedBalances.map((balance) => (
+                      <div
+                        key={balance.pubkey}
+                        className="p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <p className="font-mono text-sm text-gray-600 dark:text-gray-400">
+                              CA: {balance.account.data.parsed.info.mint}
+                            </p>
+                            <p className="text-gray-900 dark:text-gray-100">
+                              Balance: {balance.account.data.parsed.info.tokenAmount.uiAmountString}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center space-x-2 mt-4">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-600 disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-gray-700 dark:text-gray-300">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-600 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {signature && connected && (
             <div className="mt-6 p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
