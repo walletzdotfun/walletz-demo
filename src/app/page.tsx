@@ -15,16 +15,20 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [signingMessage, setSigningMessage] = useState(false);
   const itemsPerPage = 10;
 
   const handleSign = async () => {
     try {
+      setSigningMessage(true);
       const sig = await signMessage('Hello, Solana!');
       setSignature(bs58.encode(sig));
       console.log('Signature:', sig);
     } catch (error) {
       console.error('Signing failed:', error);
       setSignature(null);
+    } finally {
+      setSigningMessage(false);
     }
   };
 
@@ -33,6 +37,9 @@ export default function Home() {
       setLoading(true);
       const balances = await getTokenBalances();
       setTokenBalances(balances);
+      if (balances.length === 0) {
+        alert('No token balances found');
+      }
     } catch (error) {
       console.error('Failed to fetch token balances:', error);
     } finally {
@@ -84,15 +91,17 @@ export default function Home() {
             <WalletzModal />
             {connected && <button
               onClick={handleSign}
-              className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity"
+              disabled={signingMessage}
+              className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              Sign Message
+              {signingMessage ? 'Signing...' : 'Sign Message'}
             </button>}
             {connected && <button
               onClick={handleGetTokenBalances}
-              className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity"
+              disabled={loading}
+              className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              Get Token Balances
+              {loading ? 'Loading...' : 'Get Token Balances'}
             </button>}
           </div>
 
