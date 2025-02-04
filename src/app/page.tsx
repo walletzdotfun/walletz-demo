@@ -89,20 +89,24 @@ export default function Home() {
           <div className="flex flex-col items-center gap-4 p-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <WalletzButton />
             <WalletzModal />
-            {connected && <button
+            {connected && 
+            <div className="flex flex-row items-center gap-4 p-8 rounded-lg">
+            <button
               onClick={handleSign}
               disabled={signingMessage}
               className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {signingMessage ? 'Signing...' : 'Sign Message'}
-            </button>}
-            {connected && <button
+            </button>
+            <button
               onClick={handleGetTokenBalances}
               disabled={loading}
               className="px-6 py-2 bg-none text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {loading ? 'Loading...' : 'Get Token Balances'}
-            </button>}
+            </button>
+            </div>
+            }
           </div>
 
           {/* Token Balances Display */}
