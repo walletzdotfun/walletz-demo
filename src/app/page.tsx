@@ -4,16 +4,17 @@ import { WalletzButton, WalletzModal, useWalletz } from 'walletz';
 import { useContext, useState } from 'react';
 import { ThemeContext } from './providers';
 import { Moon, Sun } from 'lucide-react';
+import bs58 from 'bs58'
 
 export default function Home() {
-  const { signMessage } = useWalletz();
+  const { signMessage, connected } = useWalletz();
   const { theme, toggleTheme } = useContext(ThemeContext);
   const [signature, setSignature] = useState<string | null>(null);
 
   const handleSign = async () => {
     try {
       const sig = await signMessage('Hello, Solana!');
-      setSignature(sig.toString());
+      setSignature(bs58.encode(sig));
       console.log('Signature:', sig);
     } catch (error) {
       console.error('Signing failed:', error);
@@ -44,15 +45,15 @@ export default function Home() {
           <div className="flex flex-col items-center gap-4 p-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <WalletzButton />
             <WalletzModal />
-            <button
+            {connected && <button
               onClick={handleSign}
               className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:opacity-90 transition-opacity"
             >
               Sign Message
-            </button>
+            </button>}
           </div>
 
-          {signature && (
+          {signature && connected && (
             <div className="mt-6 p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
                 Signature
