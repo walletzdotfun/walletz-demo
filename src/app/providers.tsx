@@ -30,7 +30,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   const LocalWalletzConfig: WalletzConfig = {
-    rpcUrl: "https://api.mainnet-beta.solana.com",
+    rpcUrl: "https://solana.drpc.org/",
     autoConnect: true,
     theme: theme,
   };
